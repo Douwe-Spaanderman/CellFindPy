@@ -34,7 +34,7 @@ def preprocessing(data_folder, output_name, output_folder, min_genes=200, min_ce
 	
 	"""
 	#Read data and create initial AnnData Frame
-	path = str(data_folder)
+	path = '{}/'.format(data_folder)
 	adata = sc.read(path + 'matrix.mtx', cache=True).T  # transpose the data
 	adata.var_names = pd.read_csv(path + 'genes.tsv', header=None, sep='\t')[1]
 	adata.obs_names = pd.read_csv(path + 'barcodes.tsv', header=None)[0]
@@ -143,7 +143,7 @@ def find_resolution(adata, adata_raw, output_folder, output_name, initial_resolu
 
 	if save == True:
 		if subclustering == False:
-			df_cluster_copy.to_csv('{}{}/initial_cluster_matrix.csv'.format(output_folder, output_name), sep=',')
+			df_cluster_copy.to_csv('{}/{}/initial_cluster_matrix.csv'.format(output_folder, output_name), sep=',')
 
 	return df_cluster_copy, resolution
 
@@ -301,7 +301,7 @@ def subclustering(adata, adata_raw, output_folder, output_name, initial_resoluti
 			print('{} has {} subclusters'.format(n, len(unique_sub_clusters)))
 
 			if save == True:
-				df_sub_cluster.to_csv('{}{}/cluster_{}_matrix.csv'.format(output_folder, output_name, n), sep=',')
+				df_sub_cluster.to_csv('{}/{}/cluster_{}_matrix.csv'.format(output_folder, output_name, n), sep=',')
 				sc.pl.tsne(adata_of_n, color='louvain')
 
 			for ii in itertools.repeat(None, len(unique_sub_clusters)):
@@ -328,7 +328,7 @@ def subclustering(adata, adata_raw, output_folder, output_name, initial_resoluti
 					print('{}.{} has {} subclusters'.format(n, nn, len(unique_sub_sub_clusters)))
 
 					if save == True:
-						df_sub_cluster.to_csv('{}{}/cluster_{}_{}_matrix.csv'.format(output_folder, output_name, n, nn), sep=',')
+						df_sub_cluster.to_csv('{}/{}/cluster_{}_{}_matrix.csv'.format(output_folder, output_name, n, nn), sep=',')
 						sc.pl.tsne(adata_of_n, color='louvain')
 
 					for iii in itertools.repeat(None, len(unique_sub_sub_clusters)):

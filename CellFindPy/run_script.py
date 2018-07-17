@@ -11,7 +11,7 @@ def main(data_folder, output_name, output_folder, min_genes=200, min_cells=3, ma
 	mito_cutoff=False, n_pcs=10, initial_resolution=0.1, resolution_steps=0.05, threshold=10, subclustering=True, 
 	subclustering_steps=0.2, save=True):
 	#Check if Directory already exist and make new Directory
-	if os.path.isdir('{}{}'.format(output_folder, output_name)) == True:
+	if os.path.isdir('{}/{}'.format(output_folder, output_name)) == True:
 		print('WARNING')
 		print('Output folder is already present')
 		print('Continuing might overright files in folder')
@@ -19,7 +19,7 @@ def main(data_folder, output_name, output_folder, min_genes=200, min_cells=3, ma
 
 		input("Press Enter to continue...")
 	else:
-		os.mkdir('{}{}'.format(output_folder, output_name))
+		os.mkdir('{}/{}'.format(output_folder, output_name))
 
 	#Setup adata
 	adata = cf.preprocessing(data_folder, output_name, output_folder, min_genes, min_cells, max_genes, mito_cutoff)
@@ -44,7 +44,7 @@ def main(data_folder, output_name, output_folder, min_genes=200, min_cells=3, ma
 		#FindMarkerGenes for each group
 		df_all_clusters = cf.findmarker_genes(adata, adata_raw)
 		if save == True:
-			df_all_clusters.to_csv('{}{}/all_clusters_matrix.csv'.format(output_folder, output_name), sep=',')
+			df_all_clusters.to_csv('{}/{}/all_clusters_matrix.csv'.format(output_folder, output_name), sep=',')
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description="CellFindPy for RNA seq cell clustering")
@@ -115,4 +115,4 @@ if __name__ == '__main__':
 	h, m = divmod(m, 60)
 	print('script is completed')
 	print("completed in %d:%02d:%02d" % (h, m, s))
-	print('all output files are located at {}{}/'.format(output_folder, output_name))
+	print('all output files are located at {}/{}/'.format(output_folder, output_name))

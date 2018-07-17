@@ -84,11 +84,11 @@ read -r -p "Do you want to initialize a virtual environment before initializing 
         ;;
     esac
 
-read -r -p "Do you want to check if all the required packages are installed? Note highly recommended on
-first run. Also make sure to have requirements.txt in the same folder if you want to install packages" response3
+read -r -p "Do you want to check if all the required packages are installed? [y/N] Note highly recommended on
+first run. Also make sure to have requirements.txt one folder down if you want to install packages" response3
     case "$response3" in
     [yY][eE][sS]|[yY])
-        pip install -r requirements.txt
+        pip install -r ../requirements.txt
         ;;
     *)
         echo "Packages weren't checked"
