@@ -88,7 +88,7 @@ read -r -p "Do you want to check if all the required packages are installed? [y/
 first run. Also make sure to have requirements.txt one folder down if you want to install packages" response3
     case "$response3" in
     [yY][eE][sS]|[yY])
-        pip3 install -r ../requirements.txt
+        pip install -r ../requirements.txt
         ;;
     *)
         echo "Packages weren't checked"
