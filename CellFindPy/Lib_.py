@@ -53,7 +53,7 @@ def preprocessing(data_folder, output_name, output_folder, min_genes=200, min_ce
 	mito_genes = [name for name in adata.var_names if name.startswith('MT-')]
 	adata.obs['percent_mito'] = np.sum(adata[:, mito_genes].X, axis=1).A1 / np.sum(adata.X, axis=1).A1
 
-	if mito_cutoff == False:
+	if int(mito_cutoff) == False:
 		pass
 	else:
 		adata = adata[adata.obs['percent_mito'] < float(mito_cutoff), :]
@@ -86,7 +86,7 @@ def further_preprocessing(adata, n_pcs=10):
 	return adata
 
 def find_resolution(adata, adata_raw, output_folder, output_name, initial_resolution=0.1, 
-	resolution_steps=0.05, threshold=10, subclustering=False, subclustering_steps=0.02, save=True):
+	resolution_steps=0.05, threshold=10, subclustering=False, subclustering_steps=0.02):
 	"""
 
 	"""
@@ -112,7 +112,7 @@ def find_resolution(adata, adata_raw, output_folder, output_name, initial_resolu
 		if len(adata_n.obs.louvain.unique()) == 1:
 			print('{} gives only one cluster'.format(resolution))
 			if resolution >= 0.7:
-				if subclustering == False:
+				if bool(subclustering) == False:
 					print('still no initial clusters found at {}'.format(resolution))
 					print('aborting script')
 					sys.exit()
@@ -130,7 +130,7 @@ def find_resolution(adata, adata_raw, output_folder, output_name, initial_resolu
 
 	#Possible Save for Dataframe
 	if resolution >= initial_resolution+resolution_steps:
-		if subclustering == False:
+		if bool(subclustering) == False:
 			resolution = resolution-resolution_steps
 			print('resolution is set back to {}'.format(resolution))
 		else:
@@ -140,10 +140,6 @@ def find_resolution(adata, adata_raw, output_folder, output_name, initial_resolu
 	else:
 		resolution = initial_resolution
 		print('resolution is set back to {}'.format(resolution))
-
-	if save == True:
-		if subclustering == False:
-			df_cluster_copy.to_csv('{}/{}/initial_cluster_matrix.csv'.format(output_folder, output_name), sep=',')
 
 	return df_cluster_copy, resolution
 
@@ -266,7 +262,7 @@ def cluster_check(df_cluster, resolution, threshold=10):
 	return do
 
 def subclustering(adata, adata_raw, output_folder, output_name, initial_resolution=0.1, 
-	subclustering_steps=0.02, threshold=10, subclustering=True, save=True):
+	subclustering_steps=0.02, threshold=10, subclustering=1, save=True):
 	"""
 
 	"""
@@ -300,7 +296,7 @@ def subclustering(adata, adata_raw, output_folder, output_name, initial_resoluti
 		else:
 			print('{} has {} subclusters'.format(n, len(unique_sub_clusters)))
 
-			if save == True:
+			if bool(save) == True:
 				df_sub_cluster.to_csv('{}/{}/cluster_{}_matrix.csv'.format(output_folder, output_name, n), sep=',')
 				sc.pl.tsne(adata_of_n, color='louvain')
 
@@ -327,7 +323,7 @@ def subclustering(adata, adata_raw, output_folder, output_name, initial_resoluti
 				else:
 					print('{}.{} has {} subclusters'.format(n, nn, len(unique_sub_sub_clusters)))
 
-					if save == True:
+					if bool(save) == True:
 						df_sub_cluster.to_csv('{}/{}/cluster_{}_{}_matrix.csv'.format(output_folder, output_name, n, nn), sep=',')
 						sc.pl.tsne(adata_of_n, color='louvain')
 
@@ -351,3 +347,45 @@ def subclustering(adata, adata_raw, output_folder, output_name, initial_resoluti
 
 	return adata
 
+def all_stats(adata, df):
+	"""
+
+	"""
+	#Loop through the clusters to get data for creating all_stats dataframe
+	n = 0
+	unique_clusters = adata.obs.louvain.unique()
+	df_all_stats = pd.DataFrame({'A' : []})
+
+	for i in itertools.repeat(None, len(unique_clusters)):
+
+		cluster_name = unique_clusters[n]
+		cluster_data = adata[adata.obs['louvain'] == '{}'.format(cluster_name)]
+		number_cells = len(adata.obs_names)
+		df_sorted = df.sort_values('Avg_diff_{}'.format(cluster_name))
+		gene_list = df_sorted.index.values.tolist()[0:39]
+
+		#should still add average reads and genes
+
+		combined_list = [number_cells] + gene_list
+		list_index = ['number_cells', 'top_1', 'top_2', 'top_3', 'top_4', 
+					'top_5', 'top_6', 'top_7', 'top_8', 'top_9', 'top_10', 
+					'top_11', 'top_12', 'top_13', 'top_14', 'top_15', 
+					'top_16', 'top_17', 'top_18', 'top_19', 'top_20', 
+					'top_21', 'top_22', 'top_23', 'top_24', 'top_25', 
+					'top_26', 'top_27', 'top_28', 'top_29', 'top_30', 
+					'top_31', 'top_32', 'top_33', 'top_34', 'top_35', 
+					'top_36', 'top_37', 'top_38', 'top_39']
+		combined_dict = dict(zip(list_index, combined_list))
+
+		#Create DataFrame 
+		if df_all_stats.empty == True:
+			df_all_stats = pd.DataFrame.from_dict(combined_dict, orient='index', columns=[cluster_name])
+
+		else:
+			df_2 = pd.DataFrame.from_dict(combined_dict, orient='index', columns=[cluster_name])
+
+			df_cluster = pd.concat([df_all_stats, df_2], axis=1, sort=True)	
+
+		n += 1
+
+	return df_all_stats

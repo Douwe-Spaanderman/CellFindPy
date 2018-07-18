@@ -35,7 +35,7 @@ def main(data_folder, output_name, output_folder, min_genes=200, min_cells=3, ma
 	sc.tl.louvain(adata, random_state=100, resolution=resolution, flavor='vtraag')
 
 	#Further subclustering
-	if subclustering == True:
+	if bool(subclustering) == True:
 		adata = cf.subclustering(adata, adata_raw, output_folder, output_name, 
 								initial_resolution, subclustering_steps, threshold, subclustering)
 		sc.tl.tsne(adata, random_state=1, n_pcs=10, use_fast_tsne=True, learning_rate=200)
@@ -43,8 +43,17 @@ def main(data_folder, output_name, output_folder, min_genes=200, min_cells=3, ma
 
 		#FindMarkerGenes for each group
 		df_all_clusters = cf.findmarker_genes(adata, adata_raw)
-		if save == True:
+
+		if bool(save) == True:
 			df_all_clusters.to_csv('{}/{}/all_clusters_matrix.csv'.format(output_folder, output_name), sep=',')
+			cf.all_stats(adata, df_all_clusters)
+
+	elif bool(subclustering) == False:
+		if bool(save) == True:
+			df_initial_cluster.to_csv('{}/{}/initial_cluster_matrix.csv'.format(output_folder, output_name), sep=',')
+			cf.all_stats(adata, df_initial_cluster)
+		elif bool(save) == False:
+			sc.pl.tsne(adata, color='louvain')
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description="CellFindPy for RNA seq cell clustering")
@@ -57,8 +66,8 @@ if __name__ == '__main__':
 						help="Minimum amount of cells required for a gene to be valid")
 	parser.add_argument("-max_g", "--max_genes", nargs="?", default="7000", 
 						help="Maximum amount of genes permitted for a cell to be valid")
-	parser.add_argument("-mito_c", "--mito_cutoff", nargs="?", default=False, 
-						help="Percentage of genes permitted to be assigned to mitochondrial genes in a cell")
+	parser.add_argument("-mito_c", "--mito_cutoff", nargs="?", default="0", 
+						help="Percentage of genes permitted to be assigned to mitochondrial genes in a cell(0 = False, 1 = True)")
 	parser.add_argument("-n_p", "--number_pcs", nargs="?", default="10", 
 						help="Amount of principal component analysis to use for neighbor graph calculation")
 	parser.add_argument("-i_r", "--initial_resolution", nargs="?", default="0.1", 
@@ -67,12 +76,12 @@ if __name__ == '__main__':
 						help="Steps to itterate cluster finding with, a smaller resolution step helps more accurate results, however increases script run time")
 	parser.add_argument("-t", "--threshold", nargs="?", default="10", 
 						help="threshold of genes to be different between clusters")
-	parser.add_argument("-sub", "--subclustering", nargs="?", default=True, 
-						help="Option if you want to do subclustering")
+	parser.add_argument("-sub", "--subclustering", nargs="?", default="1", 
+						help="Option if you want to do subclustering(0 = False, 1 = True)")
 	parser.add_argument("-sub_s", "--subclustering_steps", nargs="?", default="0.2", 
 						help="steps similair to resolution_steps, but for subclustering")
-	parser.add_argument("-sa", "--save", nargs="?", default="True", 
-						help="Option to save the data, if return False only the tsne are going to be shown")
+	parser.add_argument("-sa", "--save", nargs="?", default="1", 
+						help="Option to save the data, if return False only the tsne are going to be shown(0 = False, 1 = True)")
 	args = parser.parse_args()
 
 	data_folder = args.data_folder
@@ -81,14 +90,14 @@ if __name__ == '__main__':
 	min_genes = float(args.min_genes)
 	min_cells = float(args.min_cells)
 	max_genes = float(args.max_genes)
-	mito_cutoff = args.mito_cutoff
+	mito_cutoff = float(args.mito_cutoff)
 	n_pcs = int(args.number_pcs)
 	initial_resolution = float(args.initial_resolution)
 	resolution_steps = float(args.resolution_steps)
 	threshold = float(args.threshold)
-	subclustering = args.subclustering
+	subclustering = int(args.subclustering)
 	subclustering_steps = float(args.subclustering_steps)
-	save = args.save
+	save = int(args.save)
 
 	print(sys.version)
 

@@ -35,7 +35,7 @@ read -r -p "Do you want to set multiple different parameters or use the standard
         read -p 'Min_cells: ' min_c
         echo "Maximum amount of genes permitted for a cell to be valid (default=7000)"
         read -p 'Max_genes: ' max_g
-        echo "Percentage of genes permitted to be assigned to mitochondrial genes in a cell (default=False)"
+        echo "Percentage of genes permitted to be assigned to mitochondrial genes in a cell (default=0)"
         read -p 'Mito_cutoff: ' mito_c
         echo "Amount of principal component analysis to use for neighbor graph calculation (default=10)"
         read -p 'n_pcs: ' n_pcs
@@ -46,11 +46,11 @@ read -r -p "Do you want to set multiple different parameters or use the standard
         read -p 'resolution_steps: ' r_s
         echo "threshold of genes to be different between clusters (default=10)"
         read -p 'gene_threshold: ' t
-        echo "Option if you want to do subclustering (default=True)"
+        echo "Option if you want to do subclustering (default=1, True=1, False=0)"
         read -p 'subclustering: ' sub
         echo "subclustering_steps. Similair to resolution_steps, but for subclustering (default=0.02)"
         read -p 'subclustering_steps: ' sub_s
-        echo "Option to save the data (default=True)"
+        echo "Option to save the data (default=1, True=1, False=0)"
         read -p 'save: ' save
         ;;
     *)
@@ -58,14 +58,14 @@ read -r -p "Do you want to set multiple different parameters or use the standard
         echo "Min_genes = 200"
         echo "Min_cells = 3"
         echo "Max_genes = 7000"
-        echo "Mito_cutoff = False"
+        echo "Mito_cutoff = 0"
         echo "Number_pcs = 10"
         echo "initial_resolution = 0.1"
         echo "resolution_steps = 0.05"
         echo "gene_threshold = 10"
-        echo "subclustering = True"
+        echo "subclustering = 1"
         echo "subclustering_steps = 0.02"
-        echo "Save = True"
+        echo "Save = 1"
         ;;
     esac
 
