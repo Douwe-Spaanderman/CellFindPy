@@ -39,7 +39,6 @@ def main(data_folder, output_name, output_folder, min_genes=200, min_cells=3, ma
 		adata = cf.subclustering(adata, adata_raw, output_folder, output_name, 
 								initial_resolution, subclustering_steps, threshold, subclustering)
 		sc.tl.tsne(adata, random_state=1, n_pcs=10, use_fast_tsne=True, learning_rate=200)
-		sc.pl.tsne(adata, color='louvain')
 
 		#FindMarkerGenes for each group
 		df_all_clusters = cf.findmarker_genes(adata, adata_raw)
@@ -47,13 +46,27 @@ def main(data_folder, output_name, output_folder, min_genes=200, min_cells=3, ma
 		if bool(save) == True:
 			df_all_clusters.to_csv('{}/{}/all_clusters_matrix.csv'.format(output_folder, output_name), sep=',')
 			cf.all_stats(adata, df_all_clusters)
+			sc.pl.tsne(adata, color='louvain', show=False, save=True)
+			os.rename('./figures/tsne.pdf', '{}/{}/all_clusters_tsne.pdf'.format(output_folder, output_name))
+
+		elif bool(save) == False:
+			sc.pl.tsne(adata, color='louvain')
 
 	elif bool(subclustering) == False:
+		sc.tl.tsne(adata, random_state=1, n_pcs=10, use_fast_tsne=True, learning_rate=200)
+
 		if bool(save) == True:
 			df_initial_cluster.to_csv('{}/{}/initial_cluster_matrix.csv'.format(output_folder, output_name), sep=',')
 			cf.all_stats(adata, df_initial_cluster)
+			sc.pl.tsne(adata, color='louvain', show=False, save=True)
+			os.rename('./figures/tsne.pdf', '{}/{}/initial_cluster_tsne.pdf'.format(output_folder, output_name))
 		elif bool(save) == False:
 			sc.pl.tsne(adata, color='louvain')
+
+	#So scanpy save tsne is super stuppid as it let's you only save to ./figures/tnse.pdf so for every time
+	#the tsne is plotted, os.rename is used to relocate it to the output folder with the wanted name
+	#this last stap is to get rid of the ./figures directory
+	os.rmdir('./figures')
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description="CellFindPy for RNA seq cell clustering")
@@ -78,7 +91,7 @@ if __name__ == '__main__':
 						help="threshold of genes to be different between clusters")
 	parser.add_argument("-sub", "--subclustering", nargs="?", default="1", 
 						help="Option if you want to do subclustering(0 = False, 1 = True)")
-	parser.add_argument("-sub_s", "--subclustering_steps", nargs="?", default="0.2", 
+	parser.add_argument("-sub_s", "--subclustering_steps", nargs="?", default="0.05", 
 						help="steps similair to resolution_steps, but for subclustering")
 	parser.add_argument("-sa", "--save", nargs="?", default="1", 
 						help="Option to save the data, if return False only the tsne are going to be shown(0 = False, 1 = True)")
@@ -98,6 +111,14 @@ if __name__ == '__main__':
 	subclustering = int(args.subclustering)
 	subclustering_steps = float(args.subclustering_steps)
 	save = int(args.save)
+
+	#Some ways to clean up the arguments passed
+	if data_folder.endswith('/'):
+		data_folder = data_folder[:-1]
+	if output_folder.endswith('/'):
+		output_folder = output_folder[:-1]
+	if output_name.endswith('/'):
+		output_name = output_name[:-1]
 
 	print(sys.version)
 

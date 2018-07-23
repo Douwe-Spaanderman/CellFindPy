@@ -1,6 +1,7 @@
 import sys
 import itertools
 import math
+import os
 import pandas as pd
 import numpy as np
 import scanpy.api as sc
@@ -152,7 +153,12 @@ def findmarker_genes(adata, adata_raw, df_cluster=pd.DataFrame({'A' : []}), pseu
 	adata_c.obs['louvain'] = adata.obs['louvain']
 
 	#Change categorial first to numeric in order to sort correctly
-	unique_clusters = sorted(pd.to_numeric(adata_c.obs.louvain.unique()))
+	try:
+		unique_clusters = sorted(pd.to_numeric(adata_c.obs.louvain.unique()))
+	except ValueError:
+		#For instance 2.0.0 can't be changed to numeric (ValueError), so this is a temporarily solution to get an unsorted big Matrix
+		unique_clusters = adata_c.obs.louvain.unique()
+
 
 	for i in itertools.repeat(None, len(unique_clusters)):
 		nnn = 0
@@ -298,7 +304,9 @@ def subclustering(adata, adata_raw, output_folder, output_name, initial_resoluti
 
 			if bool(save) == True:
 				df_sub_cluster.to_csv('{}/{}/cluster_{}_matrix.csv'.format(output_folder, output_name, n), sep=',')
-				sc.pl.tsne(adata_of_n, color='louvain')
+				sc.tl.tsne(adata_of_n, random_state=1, n_pcs=10, use_fast_tsne=True, learning_rate=200)
+				sc.pl.tsne(adata_of_n, color='louvain', show=False, save=True)
+				os.rename('./figures/tsne.pdf', '{}/{}/cluster_{}_tsne.pdf'.format(output_folder, output_name, n))
 
 			for ii in itertools.repeat(None, len(unique_sub_clusters)):
 				print('clustering sub_cluster {}.{}'.format(n, nn))
@@ -325,7 +333,9 @@ def subclustering(adata, adata_raw, output_folder, output_name, initial_resoluti
 
 					if bool(save) == True:
 						df_sub_cluster.to_csv('{}/{}/cluster_{}_{}_matrix.csv'.format(output_folder, output_name, n, nn), sep=',')
-						sc.pl.tsne(adata_of_n, color='louvain')
+						sc.tl.tsne(adata_sub_of_n, random_state=1, n_pcs=10, use_fast_tsne=True, learning_rate=200)
+						sc.pl.tsne(adata_sub_of_n, color='louvain', show=False, save=True)
+						os.rename('./figures/tsne.pdf', '{}/{}/cluster_{}_{}_tsne.pdf'.format(output_folder, output_name, n, nn))
 
 					for iii in itertools.repeat(None, len(unique_sub_sub_clusters)):
 						adata_sub_sub_of_n = 0
