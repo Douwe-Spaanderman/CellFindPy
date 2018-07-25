@@ -12,7 +12,6 @@ llvmlite==0.23.2
 louvain==0.6.1
 MarkupSafe==1.0
 matplotlib==2.2.2
-MulticoreTSNE==0.1
 natsort==5.3.2
 networkx==2.1
 numba==0.38.1
