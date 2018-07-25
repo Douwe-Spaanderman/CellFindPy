@@ -11,29 +11,35 @@ import scipy.stats as ss
 from rpy2.robjects.packages import importr
 from rpy2.robjects.vectors import FloatVector
 
-#sc.settings.verbosity = 3  # verbosity: errors (0), warnings (1), info (2), hints (3) for additional scanpy information
 sc.settings.set_figure_params(color_map='viridis')
 stats = importr('stats')
 
 
-def preprocessing(data_folder, output_name, output_folder, min_genes=200, min_cells=3, max_genes=7000, mito_cutoff=False):
+def preprocessing(
+	data_folder,
+	min_genes=200,
+	min_cells=3,
+	max_genes=7000,
+	mito_cutoff=False,
+	normalize=True
+	):
 	"""
 	Combined function for preprocessing using Scanpy. For a more complete documentation on preprocessing, please
 	visit
 
 	Input:
-		data_folder = 
-		output_name =
-		output_folder =
-		min_genes =
-		min_cells =
-		max_genes =
-		mito_cutoff =
+		data_folder = Path to data files
+		min_genes = Minimum amount of genes required for a gene to be valid (default is set at 200)
+		min_cells = Minimum amount of cells required for a gene to be valid (default is set at 3)
+		max_genes = Maximum amount of genes permitted for a cell to be valid (default is set at 7000)
+		mito_cutoff = Percentage of genes permitted to be assigned to  
+		mitochondrial Genes in a cell (default is set at False=0)
+		normalize = Normalize the Anndata object (default set at True)
 
-	Returns AnnData type
+	Returns AnnData type from matrix - genes - barcodes. Full documentation on AnnData can be found on github.
 
-	
 	"""
+
 	#Read data and create initial AnnData Frame
 	path = '{}/'.format(data_folder)
 	adata = sc.read(path + 'matrix.mtx', cache=True).T  # transpose the data
@@ -59,38 +65,90 @@ def preprocessing(data_folder, output_name, output_folder, min_genes=200, min_ce
 	else:
 		adata = adata[adata.obs['percent_mito'] < float(mito_cutoff), :]
 
-	sc.pp.normalize_per_cell(adata, counts_per_cell_after=1e4)
+	#Normalize data option
+	if normalize == True:
+		sc.pp.normalize_per_cell(adata, counts_per_cell_after=1e4)
 
 	return adata
 
-def further_preprocessing(adata, n_pcs=10):
+def further_preprocessing(
+	adata, 
+	n_pcs=10
+	):
 	"""
+	Further preprocessing consists of filtering genes based on dispersion,
+	regress out on total counts per cell (n_counts), scale the data,
+	doing principal component analysis and calculating neighbors.
+
+	All these steps are done as described by Scanpy.
+
+	Input:
+		adata = Anndata derived from preprocessing 
+		n_pcs = amount of principal component analysis used for neighbor
+		calculation (default is set at 10)
+
+	Returns preprocessed AnnData object including neigbor assignment
 
 	"""
 
+	# Select genes with high dispersion
 	filter_result = sc.pp.filter_genes_dispersion(
     	adata.X, min_mean=0.0125, max_mean=3, min_disp=0.5)
 
-	sc.pp.log1p(adata)
-
+	# Filter out these genes
 	adata = adata[:, filter_result.gene_subset]
 
+	# Regress out based on total read count per cell
+	print(adata.X)
 	sc.pp.regress_out(adata, ['n_counts'])
+	print(adata.X)
 
 	sc.pp.scale(adata, max_value=10)
 
 	sc.tl.pca(adata, n_comps=40)
 
-	#adata.obsm['X_pca'] *= -1  # multiply by -1 to match Seurat
+	# Neighbor assigment based on n_pcs number of principal component anaylsis
 	sc.pp.neighbors(adata, n_pcs=n_pcs)
 
 	return adata
 
-def find_resolution(adata, adata_raw, output_folder, output_name, initial_resolution=0.1, 
-	resolution_steps=0.05, threshold=10, subclustering=False, subclustering_steps=0.02):
+def find_resolution(
+	adata,
+	adata_raw,
+	output_folder,
+	output_name,
+	initial_resolution=0.1,
+	resolution_steps=0.05,
+	threshold=10,
+	subclustering=False,
+	subclustering_steps=0.02
+	):
 	"""
+	Find Resolution uses looping through clustering to identify suitable resolution
+	for adata. It starts using initial resolution for clustering -> identifies
+	markers per cluster in that resolution and checks if resolution passes cluster
+	check. If it does than it starts over with a higher resolution (resolution that
+	just passed + resolution steps). It does this until cluster check passes False, 
+	after it returns the resolution which was last suitable.
+
+	Input:
+		adata = AnnData object after further preprocessing
+		adata_raw = AnnData object before further preprocessing
+		output_folder = location to store output matrix
+		output_name = directory name to store output matrix
+		initial_resolution = The initial resolution to find clusters with (default = 0.1)
+		resolution_steps = Steps to itterate cluster finding with, 
+		a smaller resolution step helps more accurate results, 
+		however increases script run time (default = 0.05)
+		threshold = threshold of genes to be log(2) differentially expressed between clusters
+		subclustering = option if you want to do subclustering(0 = False, 1 = True)
+		subclustering_steps = steps similair to resolution_steps but for subclustering
+	
+	Returns last resolution where cluster check passed True and gives Dataframe of that
+	resolution with marker genes
 
 	"""
+
 	n = 0
 	do = True
 	df_cluster = 0
@@ -144,8 +202,27 @@ def find_resolution(adata, adata_raw, output_folder, output_name, initial_resolu
 
 	return df_cluster_copy, resolution
 
-def findmarker_genes(adata, adata_raw, df_cluster=pd.DataFrame({'A' : []}), pseudocount=1):
+def findmarker_genes(
+	adata,
+	adata_raw,
+	df_cluster=pd.DataFrame({'A' : []}),
+	pseudocount=1
+	):
 	"""
+	Findmarker genes is inspired by Seurat's FindMarker genes, calculating the mean, 
+	standard deviation, average difference expression of genes between clusters and
+	p-value based on a mannwhitneyu statistical analysis. This analysis is conducted
+	on the average difference expression.
+
+	Input:
+		adata = AnnData object after further preprocessing
+		adata_raw = AnnData object before further preprocessing
+		df_cluster = df_cluster to append data to (default = empty df)
+		pseudocount = addition for average difference calculation to mimic Seurat
+					(default = 1)
+
+	Returns Dataframe with mean, standard devation, average difference expression
+	and hochberg adjusted p-value for every cluster.
 
 	"""
 	nn = 0
@@ -158,7 +235,6 @@ def findmarker_genes(adata, adata_raw, df_cluster=pd.DataFrame({'A' : []}), pseu
 	except ValueError:
 		#For instance 2.0.0 can't be changed to numeric (ValueError), so this is a temporarily solution to get an unsorted big Matrix
 		unique_clusters = adata_c.obs.louvain.unique()
-
 
 	for i in itertools.repeat(None, len(unique_clusters)):
 		nnn = 0
@@ -181,6 +257,7 @@ def findmarker_genes(adata, adata_raw, df_cluster=pd.DataFrame({'A' : []}), pseu
 		adata_ccc = adata_cc[:, genes]
 
 		#Avg Dif
+		#+1 is pseudocount to match seurat
 		mean = np.log(np.mean(np.expm1(adata_nn.X), axis=0) + pseudocount)
 		mean_total = np.log(np.mean(np.expm1(adata_ccc.X), axis=0) + pseudocount)
 		avg_diff = mean - mean_total
@@ -192,7 +269,6 @@ def findmarker_genes(adata, adata_raw, df_cluster=pd.DataFrame({'A' : []}), pseu
 		adata_ccc_wilcoxon = adata_ccc[:, list(adata_nn.var_names)]
 
 		#Calculate values again for array creation (because genes got selected out)
-		# +1 is pseudocount to match seurat
 		standard_deviation = np.std(adata_nn.X, axis=0)
 		mean = np.log(np.mean(np.expm1(adata_nn.X), axis=0) + pseudocount)
 		mean_total = np.log(np.mean(np.expm1(adata_ccc_wilcoxon.X), axis=0) + pseudocount)
@@ -241,11 +317,27 @@ def findmarker_genes(adata, adata_raw, df_cluster=pd.DataFrame({'A' : []}), pseu
 
 	return df_cluster
 
-def cluster_check(df_cluster, resolution, threshold=10):
+def cluster_check(
+	df_cluster,
+	resolution,
+	threshold=10
+	):
 	"""
+	Checks in dataframe from findmarker genes if genes are > log(2) differentially
+	expressed and if hochberg p-value is < 10e-5. Cluster check returns True if
+	for both these cases X (default = 10) amount of genes are found.
+
+	Note for developper -> make log(2) and 10e-5 custumizable
+
+	Input:
+		df_cluster = Dataframe from findmarker genes
+		resolution = Resolution assigned to Dataframe
+		threshold = Threshold of genes to be different between clusters (default = 10)
+
+	Returns True or False on cluster check
 
 	"""
-	#Now use Matrix to check if cluster is real
+
 	df_cluster_check = df_cluster[df_cluster.columns[df_cluster.columns.str.startswith('Avg') | df_cluster.columns.str.startswith('P')]]
 
 	avg_diff_list = []
@@ -267,9 +359,40 @@ def cluster_check(df_cluster, resolution, threshold=10):
 
 	return do
 
-def subclustering(adata, adata_raw, output_folder, output_name, initial_resolution=0.1, 
-	subclustering_steps=0.02, threshold=10, subclustering=1, save=True):
+def subclustering(
+	adata,
+	adata_raw,
+	output_folder,
+	output_name,
+	initial_resolution=0.1, 
+	subclustering_steps=0.02,
+	threshold=10,
+	subclustering=True,
+	save=True
+	):
 	"""
+	Subclustering data using initial clustering data, which is done
+	similair to initial cluster looping. Option to save TSNE and
+	matrix files for every single cluster and subcluster.
+
+	Input:
+		adata = AnnData object after initial clustering
+		adata_raw = AnnData object before further preprocessing
+		output_folder = Path to save folder
+		output_name = Output name
+		initial_resolution = The initial resolution to find clusters with 
+						(default is set at 0.1)
+		subclustering_steps = Steps similair to resolution_steps, 
+						but for subclustering (default is set at 0.02)
+		threshold = Threshold of genes to be different between clusters 
+					(default is set at 10)
+		subclustering = Option if you want to do subclustering 
+					(default is set at True = 1)
+		save = Option to save the data, if return False only the tsne are 
+			going to be shown (default set at True)
+
+	Returns new assigned louvain cluster to adata. Also able to save
+	TSNE and matrix files for each cluster and subcluster 
 
 	"""
 	n = 0
@@ -278,6 +401,7 @@ def subclustering(adata, adata_raw, output_folder, output_name, initial_resoluti
 	louvain_dict = dict()
 	print('running through clusters to find subclusters')
 
+	# Loop through initial found clusters
 	for i in itertools.repeat(None, len(unique_clusters)):
 		print('clustering cluster {}'.format(n))
 		adata_of_n = 0
@@ -308,6 +432,7 @@ def subclustering(adata, adata_raw, output_folder, output_name, initial_resoluti
 				sc.pl.tsne(adata_of_n, color='louvain', show=False, save=True)
 				os.rename('./figures/tsne.pdf', '{}/{}/cluster_{}_tsne.pdf'.format(output_folder, output_name, n))
 
+			# Loop through subclusters found in main cluster for subsubclustering
 			for ii in itertools.repeat(None, len(unique_sub_clusters)):
 				print('clustering sub_cluster {}.{}'.format(n, nn))
 				adata_sub_of_n = 0
@@ -350,17 +475,31 @@ def subclustering(adata, adata_raw, output_folder, output_name, initial_resoluti
 
 		n += 1
 
-	#remove old louvain and add new one
+	# Remove old louvain data and add new one
 	adata.obs = adata.obs.drop('louvain', axis=1)
 
 	adata.obs = pd.concat([adata.obs, pd.DataFrame([louvain_dict], index=['louvain']).T], axis=1)
 
 	return adata
 
-def all_stats(adata, df):
+def all_stats(
+	adata,
+	df
+	):
 	"""
+	All stats creates an overall matrix from all the cluster together.
+	Including number of cells in cluster and top 40 genes.
+
+	Note for developer: still need average reads and genes
+
+	Input:
+		adata = AnnData object after clustering
+		df = Dataframe from find markers
+
+	Returns matrix with general data for every cluster
 
 	"""
+
 	#Loop through the clusters to get data for creating all_stats dataframe
 	n = 0
 	unique_clusters = adata.obs.louvain.unique()
@@ -374,7 +513,7 @@ def all_stats(adata, df):
 		df_sorted = df.sort_values('Avg_diff_{}'.format(cluster_name))
 		gene_list = df_sorted.index.values.tolist()[0:39]
 
-		#should still add average reads and genes
+		# Note should still add average reads and genes
 
 		combined_list = [number_cells] + gene_list
 		list_index = ['number_cells', 'top_1', 'top_2', 'top_3', 'top_4', 
@@ -387,7 +526,7 @@ def all_stats(adata, df):
 					'top_36', 'top_37', 'top_38', 'top_39']
 		combined_dict = dict(zip(list_index, combined_list))
 
-		#Create DataFrame 
+		# Create DataFrame 
 		if df_all_stats.empty == True:
 			df_all_stats = pd.DataFrame.from_dict(combined_dict, orient='index', columns=[cluster_name])
 
@@ -399,3 +538,48 @@ def all_stats(adata, df):
 		n += 1
 
 	return df_all_stats
+
+def merge_datasets(
+	adata_1,
+	adata_2,
+	dataset_name_addition=False
+	):
+	'''
+	Merge two datasets together.
+
+	Input:
+		adata_1 = AnnData dataset 1 after preprocessing
+		adata_2 = AnnData dataset 2 after preprocessing
+		dataset_name_addition = Option to add unique name to cells in dataset
+								(default = False)
+
+	Returns merged AnnData object
+
+	'''
+	if bool(dataset_name_addition) == True:
+		# Add dataset_X to obs_names for when there are overlapping obs_names
+		adata_1.obs_names = 'dataset_1_' + adata_1.obs_names
+		adata_2.obs_names = 'dataset_2_' + adata_2.obs_names
+
+		# Check if cell names are unique -> if not than stop script
+	if set(adata_1.obs_names).isdisjoint(adata_2.obs_names) == False:
+		sys.exit('overlapping names between datasets, aborting script. Datasets can be merged if dataset name addition is passed True')
+
+	# Merge data provided by AnnData
+	adata_merged = adata_1.concatenate(adata_2, index_unique=None, join='outer')
+
+	# Fill var NaN values and condense columns into 1
+	adata_merged.var = adata_merged.var.fillna(0)
+	adata_merged.var['n_cells'] = adata_merged.var['n_cells-0'] + adata_merged.var['n_cells-1']
+
+	# Remove additional not needed information
+	del adata_merged.var['n_cells-0']
+	del adata_merged.var['n_cells-1']
+	del adata_merged.obs['batch']
+
+	adata_merged.X = adata_merged.X.toarray()
+	print(adata_merged.X)
+
+	sc.pp.normalize_per_cell(adata_merged, counts_per_cell_after=1e4)
+
+	return adata_merged

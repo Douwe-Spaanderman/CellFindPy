@@ -18,16 +18,30 @@ echo "--------------------------------------------------------------------------
 
 echo "Make sure to have this setup file located in the same folder as the run script 
 	"
-echo "To initialize CellFindPy, locate the folder where the RNA sequencing data files are located"
-read -p 'File location: ' file_location
+
+read -r -p "Do you want to merge datasets? [y/N]" response1
+    case "$response1" in
+    [yY][eE][sS]|[yY]) 
+        echo "Make sure to have the setup file located in the same folder as the merge file"
+        echo "To initialize merging, locate the folder where the RNA sequencing datasets are located"
+        read -p 'Dataset_1: ' dataset_1
+        read -p 'Dataset_2: ' dataset_2
+        echo "Do you want to create unique names for cells in datasets"
+        read -p 'Put 0 for False, 1 for True: ' name_addition
+        ;;
+    *)
+        echo "To initialize CellFindPy, locate the folder where the RNA sequencing data files are located"
+        read -p 'File location: ' file_location
+        ;;
+    esac
 
 echo "Now please set the location where you want the output data to be stored aswell as giving it an 
 unique name"
 read -p 'Save location: ' store_folder
 read -p 'Save name: ' save_name
 
-read -r -p "Do you want to set multiple different parameters or use the standard parameters? [y/N]" response1
-	case "$response1" in
+read -r -p "Do you want to set multiple different parameters or use the standard parameters? [y/N]" response2
+	case "$response2" in
     [yY][eE][sS]|[yY]) 
         echo "Minimum amount of genes required for a cell to be valid (default=200)"
         read -p 'Min_genes: ' min_g
@@ -70,8 +84,8 @@ read -r -p "Do you want to set multiple different parameters or use the standard
     esac
 
 echo "----------------------------------------------------------------------------------------------------"
-read -r -p "Do you want to initialize a virtual environment before initializing CellFindPy? [y/N]" response2
-	case "$response2" in
+read -r -p "Do you want to initialize a virtual environment before initializing CellFindPy? [y/N]" response3
+	case "$response3" in
     [yY][eE][sS]|[yY]) 
         echo "Please locate this virtual environment"
         echo "Example: /Users/UserName/virtualenvs/cellfindpy_environment "
@@ -85,8 +99,8 @@ read -r -p "Do you want to initialize a virtual environment before initializing 
     esac
 
 read -r -p "Do you want to check if all the required packages are installed? [y/N] Note highly recommended on
-first run. Also make sure to have requirements.txt one folder down if you want to install packages" response3
-    case "$response3" in
+first run. Also make sure to have requirements.txt one folder down if you want to install packages" response4
+    case "$response4" in
     [yY][eE][sS]|[yY])
         pip3 install -r ../requirements.txt
         ;;
@@ -105,11 +119,28 @@ echo "
 	"
 
 case "$response1" in
-[yY][eE][sS]|[yY]) 
-    python3 run_script.py -min_g $min_g -min_c $min_c -max_g $max_g -mito_c $mito_c -n_p $n_pcs -i_r $i_r -r_s $r_s -t $t -sub $sub -sub_s $sub_s -sa $save $file_location $store_folder $save_name
+[yY][eE][sS]|[yY])
+    case "$response2" in
+    [yY][eE][sS]|[yY])
+        python3 merge.py $dataset_1 $dataset_2 $store_folder -d_n_a $name_addition -min_g $min_g -min_c $min_c -max_g $max_g -mito_c $mito_c
+        python3 run_script.py -min_g $min_g -min_c $min_c -max_g $max_g -mito_c $mito_c -n_p $n_pcs -i_r $i_r -r_s $r_s -t $t -sub $sub -sub_s $sub_s -sa $save $file_location $store_folder $save_name h5ad
+        ;;
+    *)
+        python3 merge.py $dataset_1 $dataset_2 $store_folder -d_n_a $name_addition
+        python3 run_script.py $store_folder $store_folder $save_name h5ad
+        ;;
+    esac
     ;;
 *)
-    python3 run_script.py $file_location $store_folder $save_name 
+    case "$response2" in
+    [yY][eE][sS]|[yY]) 
+        python3 run_script.py -min_g $min_g -min_c $min_c -max_g $max_g -mito_c $mito_c -n_p $n_pcs -i_r $i_r -r_s $r_s -t $t -sub $sub -sub_s $sub_s -sa $save $file_location $store_folder $save_name
+        ;;
+    *)
+        python3 run_script.py $file_location $store_folder $save_name
+        ;;
+    esac
+    ;;
 esac
 
 echo "===================================================================================================="

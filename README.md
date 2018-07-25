@@ -34,7 +34,7 @@ To be determined
 
 First step of install is only required to be able to use both _setup_.sh and run_script.py. If you want to use functions separately than it is advised to use pip.
 ```
-git clone https://github.com/Douwe-Spaanderman/CellFindPy
+git clone https://gitlab.com/Douwe-Spaanderman/CellFindPy
 cd CellFindPy/
 pip install .
 ```

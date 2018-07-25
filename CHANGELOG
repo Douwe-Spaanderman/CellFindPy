@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.2.0] - 24 July 2018 @DSpaanderman
+### Added - Changed
+- Merge function for two datasets
+- Changed Average Difference Calculation (included log1p)
+  This gives more and accurate clusters
+- Full documentation on script
+
 ## [0.1.1] - 23 July 2018 @DSpaanderman
 ### Upload
 - Initial commit CellFindPy
