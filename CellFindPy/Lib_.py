@@ -99,9 +99,7 @@ def further_preprocessing(
 	adata = adata[:, filter_result.gene_subset]
 
 	# Regress out based on total read count per cell
-	print(adata.X)
 	sc.pp.regress_out(adata, ['n_counts'])
-	print(adata.X)
 
 	sc.pp.scale(adata, max_value=10)
 
@@ -578,7 +576,6 @@ def merge_datasets(
 	del adata_merged.obs['batch']
 
 	adata_merged.X = adata_merged.X.toarray()
-	print(adata_merged.X)
 
 	sc.pp.normalize_per_cell(adata_merged, counts_per_cell_after=1e4)
 
