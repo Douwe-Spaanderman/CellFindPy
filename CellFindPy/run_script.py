@@ -129,6 +129,9 @@ def main(
 	#this last stap is to get rid of the ./figures directory
 	os.rmdir('./figures')
 
+	#Put out adata -> h5ad to investigate genes (NOTE !GET This in the script)
+	adata.write('{}/{}/adata_dataset.h5ad'.format(output_folder, output_name))
+
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(
 		description="CellFindPy for RNA seq cell clustering"

@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.2.1] - 27 July 2018 @DSpaanderman
+### Added
+- added gene_find function
+
 ## [0.2.0] - 24 July 2018 @DSpaanderman
 ### Added - Changed
 - Merge function for two datasets
