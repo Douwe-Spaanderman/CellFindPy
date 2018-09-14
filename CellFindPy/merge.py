@@ -9,17 +9,17 @@ import Lib_ as cf
 
 def main(dataset_1,
 	dataset_2, 
-	dataset_3, 
-	dataset_4, 
-	dataset_5, 
-	dataset_6, 
-	dataset_7
 	output_folder,
 	dataset_name_addition=False,
 	min_genes=200,
 	min_cells=3,
 	max_genes=7000,
 	mito_cutoff=False,
+	dataset_3=False, 
+	dataset_4=False, 
+	dataset_5=False, 
+	dataset_6=False, 
+	dataset_7=False,
 	normalize=False):
 	'''
 	Automated process to merge two datasets
@@ -71,23 +71,33 @@ if __name__ == '__main__':
 		)
 	parser.add_argument(
 		"dataset_3",
-		help="Path to dataset 3"
+		nargs="?",
+		default="0"
+		help="Do you want to add dataset 3? (0 = False, 1 = True)"
 		)
 	parser.add_argument(
 		"dataset_4",
-		help="Path to dataset 4"
+		nargs="?",
+		default="0"
+		help="Do you want to add dataset 4? (0 = False, 1 = True)"
 		)
 	parser.add_argument(
 		"dataset_5",
-		help="Path to dataset 5"
+		nargs="?",
+		default="0"
+		help="Do you want to add dataset 5? (0 = False, 1 = True)"
 		)
 	parser.add_argument(
 		"dataset_6",
-		help="Path to dataset 6"
+		nargs="?",
+		default="0"
+		help="Do you want to add dataset 6? (0 = False, 1 = True)"
 		)
 	parser.add_argument(
 		"dataset_7",
-		help="Path to dataset 7"
+		nargs="?",
+		default="0"
+		help="Do you want to add dataset 7? (0 = False, 1 = True)"
 		)
 	parser.add_argument(
 		"output_folder",
@@ -131,11 +141,11 @@ if __name__ == '__main__':
 
 	dataset_1 = args.dataset_1
 	dataset_2 = args.dataset_2
-	dataset_3 = args.dataset_3
-	dataset_4 = args.dataset_4
-	dataset_5 = args.dataset_5
-	dataset_6 = args.dataset_6
-	dataset_7 = args.dataset_7
+	dataset_3 = float(args.dataset_3)
+	dataset_4 = float(args.dataset_4)
+	dataset_5 = float(args.dataset_5)
+	dataset_6 = float(args.dataset_6)
+	dataset_7 = float(args.dataset_7)
 	output_folder = args.output_folder
 	dataset_name_addition = int(args.name_addition)
 	min_genes = float(args.min_genes)
