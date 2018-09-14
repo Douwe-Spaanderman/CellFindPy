@@ -53,8 +53,19 @@ def main(dataset_1,
 	adata_6 = cf.preprocessing(dataset_6, min_genes, min_cells, max_genes, mito_cutoff, normalize)
 	adata_7 = cf.preprocessing(dataset_7, min_genes, min_cells, max_genes, mito_cutoff, normalize)
 
-	merged = cf.merge_datasets(adata_1, adata_2, adata_3, adata_4, adata_5, adata_6, adata_7, dataset_name_addition)
-	
+	if dataset_3 == False 
+	    merged = cf.merge_datasets(adata_1, adata_2, dataset_name_addition)
+	elif dataset_4 == False
+	    merged = cf.merge_datasets(adata_1, adata_2, adata_3, dataset_name_addition)
+	elif dataset_5 == False
+	    merged = cf.merge_datasets(adata_1, adata_2, adata_3, adata_4, dataset_name_addition)
+	elif dataset_6 == False
+	    merged = cf.merge_datasets(adata_1, adata_2, adata_3, adata_4, adata_5, dataset_name_addition)
+	elif dataset_7 == False
+	    merged = cf.merge_datasets(adata_1, adata_2, adata_3, adata_4, adata_5, adata_6, dataset_name_addition)
+	else: 
+	    merged = cf.merge_datasets(adata_1, adata_2, adata_3, adata_4, adata_5, adata_6, adata_7, dataset_name_addition)
+	    
 	merged.write('{}/merged_dataset.h5ad'.format(output_folder))
 
 if __name__ == '__main__':
@@ -72,32 +83,32 @@ if __name__ == '__main__':
 	parser.add_argument(
 		"dataset_3",
 		nargs="?",
-		default="0"
-		help="Do you want to add dataset 3? (0 = False, 1 = True)"
+		default=False
+		help="Path to dataset 3"
 		)
 	parser.add_argument(
 		"dataset_4",
 		nargs="?",
-		default="0"
-		help="Do you want to add dataset 4? (0 = False, 1 = True)"
+		default=False
+		help="Path to dataset 4"
 		)
 	parser.add_argument(
 		"dataset_5",
 		nargs="?",
-		default="0"
-		help="Do you want to add dataset 5? (0 = False, 1 = True)"
+		default=False
+		help="Path to dataset 5"
 		)
 	parser.add_argument(
 		"dataset_6",
 		nargs="?",
-		default="0"
-		help="Do you want to add dataset 6? (0 = False, 1 = True)"
+		default=False
+		help="Path to dataset 6"
 		)
 	parser.add_argument(
 		"dataset_7",
 		nargs="?",
-		default="0"
-		help="Do you want to add dataset 7? (0 = False, 1 = True)"
+		default=False
+		help="Path to dataset 7"
 		)
 	parser.add_argument(
 		"output_folder",
@@ -141,11 +152,11 @@ if __name__ == '__main__':
 
 	dataset_1 = args.dataset_1
 	dataset_2 = args.dataset_2
-	dataset_3 = float(args.dataset_3)
-	dataset_4 = float(args.dataset_4)
-	dataset_5 = float(args.dataset_5)
-	dataset_6 = float(args.dataset_6)
-	dataset_7 = float(args.dataset_7)
+	dataset_3 = args.dataset_3
+	dataset_4 = args.dataset_4
+	dataset_5 = args.dataset_5
+	dataset_6 = args.dataset_6
+	dataset_7 = args.dataset_7
 	output_folder = args.output_folder
 	dataset_name_addition = int(args.name_addition)
 	min_genes = float(args.min_genes)
