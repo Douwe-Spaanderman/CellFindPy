@@ -8,7 +8,12 @@ import pandas as pd
 import Lib_ as cf
 
 def main(dataset_1,
-	dataset_2, dataset_3, dataset_4, dataset_5, dataset_6, dataset_7
+	dataset_2, 
+	dataset_3, 
+	dataset_4, 
+	dataset_5, 
+	dataset_6, 
+	dataset_7
 	output_folder,
 	dataset_name_addition=False,
 	min_genes=200,
