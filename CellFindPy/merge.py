@@ -53,15 +53,15 @@ def main(dataset_1,
 	adata_6 = cf.preprocessing(dataset_6, min_genes, min_cells, max_genes, mito_cutoff, normalize)
 	adata_7 = cf.preprocessing(dataset_7, min_genes, min_cells, max_genes, mito_cutoff, normalize)
 
-	if dataset_3 == False 
+	if dataset_3 == False:
 	    merged = cf.merge_datasets(adata_1, adata_2, dataset_name_addition)
-	elif dataset_4 == False
+	elif dataset_4 == False:
 	    merged = cf.merge_datasets(adata_1, adata_2, adata_3, dataset_name_addition)
-	elif dataset_5 == False
+	elif dataset_5 == False:
 	    merged = cf.merge_datasets(adata_1, adata_2, adata_3, adata_4, dataset_name_addition)
-	elif dataset_6 == False
+	elif dataset_6 == False:
 	    merged = cf.merge_datasets(adata_1, adata_2, adata_3, adata_4, adata_5, dataset_name_addition)
-	elif dataset_7 == False
+	elif dataset_7 == False:
 	    merged = cf.merge_datasets(adata_1, adata_2, adata_3, adata_4, adata_5, adata_6, dataset_name_addition)
 	else: 
 	    merged = cf.merge_datasets(adata_1, adata_2, adata_3, adata_4, adata_5, adata_6, adata_7, dataset_name_addition)
@@ -83,31 +83,31 @@ if __name__ == '__main__':
 	parser.add_argument(
 		"dataset_3",
 		nargs="?",
-		default=False
+		default=False,
 		help="Path to dataset 3"
 		)
 	parser.add_argument(
 		"dataset_4",
 		nargs="?",
-		default=False
+		default=False,
 		help="Path to dataset 4"
 		)
 	parser.add_argument(
 		"dataset_5",
 		nargs="?",
-		default=False
+		default=False,
 		help="Path to dataset 5"
 		)
 	parser.add_argument(
 		"dataset_6",
 		nargs="?",
-		default=False
+		default=False,
 		help="Path to dataset 6"
 		)
 	parser.add_argument(
 		"dataset_7",
 		nargs="?",
-		default=False
+		default=False,
 		help="Path to dataset 7"
 		)
 	parser.add_argument(
@@ -186,21 +186,20 @@ if __name__ == '__main__':
 	print('started')
 	start = time.time()
 
-	main(
-		dataset_1,
-		dataset_2,
-		dataset_3,
-		dataset_4,
-		dataset_5,
-		dataset_6,
-		dataset_7,
+	main(dataset_1,
+		dataset_2, 
 		output_folder,
 		dataset_name_addition,
 		min_genes,
 		min_cells,
 		max_genes,
-		mito_cutoff
-		)
+		mito_cutoff,
+		dataset_3, 
+		dataset_4, 
+		dataset_5, 
+		dataset_6, 
+		dataset_7
+	)
 
 	end = time.time()
 	m, s = divmod(end-start, 60)
