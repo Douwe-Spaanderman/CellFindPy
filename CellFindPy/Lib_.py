@@ -540,7 +540,9 @@ def all_stats(
 def merge_datasets(
 	adata_1,
 	adata_2,
-	dataset_name_addition=False
+	dataset_name_addition=False,
+	further_merging=False,
+	name_addition=False
 	):
 	'''
 	Merge two datasets together.
@@ -550,14 +552,26 @@ def merge_datasets(
 		adata_2 = AnnData dataset 2 after preprocessing
 		dataset_name_addition = Option to add unique name to cells in dataset
 								(default = False)
+		further_merging = if you want to further merge datasets than set to
+						True (default = False)
+		name_addition = required for giving specific name
 
 	Returns merged AnnData object
 
 	'''
-	if bool(dataset_name_addition) == True:
-		# Add dataset_X to obs_names for when there are overlapping obs_names
-		adata_1.obs_names = 'dataset_1_' + adata_1.obs_names
-		adata_2.obs_names = 'dataset_2_' + adata_2.obs_names
+	if further_merging == True:
+		if bool(dataset_name_addition) == True:
+			if name_addition == False:
+				adata_1.obs_names = 'dataset_1_' + adata_1.obs_names
+				adata_2.obs_names = 'dataset_2_' + adata_2.obs_names
+			else:
+				adata_2.obs_names = 'dataset_{}_'.format(name_addition) + adata_2.obs_names
+
+	elif further_merging == False:
+		if bool(dataset_name_addition) == True:
+			# Add dataset_X to obs_names for when there are overlapping obs_names
+			adata_1.obs_names = 'dataset_1_' + adata_1.obs_names
+			adata_2.obs_names = 'dataset_2_' + adata_2.obs_names
 
 		# Check if cell names are unique -> if not than stop script
 	if set(adata_1.obs_names).isdisjoint(adata_2.obs_names) == False:
@@ -575,8 +589,11 @@ def merge_datasets(
 	del adata_merged.var['n_cells-1']
 	del adata_merged.obs['batch']
 
-	adata_merged.X = adata_merged.X.toarray()
+	if further_merging == False:
+		adata_merged.X = adata_merged.X.toarray()
 
-	sc.pp.normalize_per_cell(adata_merged, counts_per_cell_after=1e4)
+		sc.pp.normalize_per_cell(adata_merged, counts_per_cell_after=1e4)
+
+	print(adata_merged.obs_names)
 
 	return adata_merged

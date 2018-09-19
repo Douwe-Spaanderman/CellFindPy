@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.2.2] - 19 Sept 2018 @DSpaanderman
+### Added
+- added additional dataset merging
+
 ## [0.2.1] - 27 July 2018 @DSpaanderman
 ### Added
 - added gene_find function

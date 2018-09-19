@@ -28,6 +28,7 @@ read -r -p "Do you want to merge datasets? [y/N]" response1
         read -p 'Dataset_2: ' dataset_2
         echo "Do you want to create unique names for cells in datasets"
         read -p 'Put 0 for False, 1 for True: ' name_addition
+        read -p 'If you want to merge more than use python merge.py --help in shell before running _setup_.sh'
         ;;
     *)
         echo "To initialize CellFindPy, locate the folder where the RNA sequencing data files are located"
