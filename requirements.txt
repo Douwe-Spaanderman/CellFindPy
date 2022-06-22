@@ -16,7 +16,7 @@ natsort==5.3.2
 networkx==2.1
 numba==0.38.1
 numexpr==2.6.5
-numpy==1.14.4
+numpy==1.22.0
 packaging==17.1
 pandas==0.23.0
 patsy==0.5.0
